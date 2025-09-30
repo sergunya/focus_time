@@ -1,17 +1,10 @@
 package com.focustime.nopplugin.editor
 
-import com.focustime.nopplugin.settings.GopherCursorSettings
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.project.Project
-import java.awt.AlphaComposite
-import java.awt.Color
-import java.awt.Component
-import java.awt.Container
-import java.awt.Rectangle
 import java.awt.RenderingHints
-import java.awt.image.BufferedImage
 import javax.swing.ImageIcon
 import javax.swing.JComponent
 import javax.swing.JLayer
@@ -40,10 +33,6 @@ class EditorGopherCursorInstaller(private val project: Project) {
 
     fun setEnabled(enabled: Boolean) {
         overlays.values.forEach { it.isEnabled = enabled; it.repaintTarget() }
-    }
-
-    fun updateColor(color: Color) {
-        overlays.values.forEach { it.updateColor(color); it.repaintTarget() }
     }
 
     private fun installOnExistingEditors() {
@@ -93,10 +82,6 @@ class EditorGopherCursorInstaller(private val project: Project) {
             }
         }
 
-        fun updateColor(color: Color) {
-            painter?.updateColor(color)
-        }
-
         fun repaintTarget() {
             layer?.repaint()
         }
@@ -108,13 +93,6 @@ class EditorGopherCursorInstaller(private val project: Project) {
         private val isEnabledProvider: () -> Boolean
     ) : LayerUI<JComponent>() {
         private val gopherOriginal by lazy { loadGopherIcon() }
-        private var currentColor: Color = Color(GopherCursorSettings.getInstance().settingsState.cursorColor, true)
-        private var tintedGopher: java.awt.Image? = null
-
-        fun updateColor(color: Color) {
-            currentColor = color
-            tintedGopher = null
-        }
 
         override fun paint(g: java.awt.Graphics, c: JComponent) {
             super.paint(g, c)
@@ -136,30 +114,10 @@ class EditorGopherCursorInstaller(private val project: Project) {
                 val x = pt.x - size / 2
                 val y = pt.y + (lineHeight - size) / 2
 
-                val imageToDraw = getTintedGopher(size, size)
-                g2.drawImage(imageToDraw, x, y, size, size, null)
+                g2.drawImage(gopherOriginal, x, y, size, size, null)
             } finally {
                 g2.dispose()
             }
-        }
-
-        private fun getTintedGopher(w: Int, h: Int): java.awt.Image {
-            if (currentColor.red > 250 && currentColor.green > 250 && currentColor.blue > 250) {
-                return gopherOriginal
-            }
-            val cached = tintedGopher
-            if (cached != null && cached.getWidth(null) == w && cached.getHeight(null) == h) {
-                return cached
-            }
-            val buffered = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
-            val g = buffered.createGraphics()
-            g.drawImage(gopherOriginal, 0, 0, w, h, null)
-            g.composite = AlphaComposite.SrcAtop
-            g.color = currentColor
-            g.fillRect(0, 0, w, h)
-            g.dispose()
-            tintedGopher = buffered
-            return buffered
         }
 
         private fun loadGopherIcon(): java.awt.Image {

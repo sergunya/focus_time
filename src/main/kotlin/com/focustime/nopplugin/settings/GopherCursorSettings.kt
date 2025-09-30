@@ -10,8 +10,7 @@ import com.intellij.openapi.components.service
 @State(name = "GopherCursorSettings", storages = [Storage("gopherCursorSettings.xml")])
 class GopherCursorSettings : PersistentStateComponent<GopherCursorSettings.State> {
     data class State(
-        var enabled: Boolean = true,
-        var cursorColor: Int = 0xFFFFFFFF.toInt() // Default: white (ARGB)
+        var enabled: Boolean = true
     )
 
     var settingsState = State()
