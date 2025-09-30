@@ -1,4 +1,27 @@
 plugins {
+    id("org.jetbrains.intellij") version "1.17.3"
+    kotlin("jvm") version "1.9.24"
+}
+
+repositories {
+    mavenCentral()
+}
+
+intellij {
+    version.set("2025.2")
+    plugins.set(listOf("org.jetbrains.plugins.terminal"))
+}
+
+dependencies {
+}
+
+tasks {
+    patchPluginXml {
+        sinceBuild.set("252")
+        untilBuild.set("252.*")
+    }
+}
+plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.2.0"
     id("org.jetbrains.intellij") version "1.17.3"

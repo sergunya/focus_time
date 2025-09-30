@@ -44,6 +44,12 @@ The built plugin will be available in `build/distributions/focus-time-plugin-1.0
 4. Navigate to `build/distributions/focus-time-plugin-1.0.0.zip`
 5. Select the file and click "OK"
 6. Restart GoLand to activate the plugin
+ 
+ ### Feature: Gopher Terminal Cursor
+ 
+ - Replaces the blinking cursor in the built-in Terminal with a fast Gopher icon.
+ - Toggle via Settings: `Focus Time: Gopher Terminal Cursor` or action: `Toggle Gopher Terminal Cursor`.
+ - Asset path: `src/main/resources/icons/gopher_fast.png` (drop your PNG here; transparency recommended).
 
 ### Verifying Installation
 

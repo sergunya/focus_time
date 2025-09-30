@@ -1,3 +1,29 @@
+<idea-plugin>
+  <id>com.focustime.nopplugin</id>
+  <name>Focus Time No-Op Plugin</name>
+  <vendor email="example@example.com">Focus Time</vendor>
+
+  <description><![CDATA[
+    A minimal plugin that replaces the blinking terminal cursor with a fast Gopher icon.
+    Toggle via Settings or action "Toggle Gopher Terminal Cursor".
+  ]]></description>
+
+  <depends>com.intellij.modules.platform</depends>
+  <depends optional="true">org.jetbrains.plugins.terminal</depends>
+
+  <projectService serviceImplementation="com.focustime.nopplugin.terminal.GopherCursorInstaller"/>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <projectConfigurable instance="com.focustime.nopplugin.settings.GopherCursorConfigurable"/>
+  </extensions>
+
+  <actions>
+    <action id="com.focustime.nopplugin.actions.ToggleGopherCursor"
+            class="com.focustime.nopplugin.actions.ToggleGopherCursorAction"
+            text="Toggle Gopher Terminal Cursor"
+            description="Enable/Disable the Gopher cursor overlay in Terminal"/>
+  </actions>
+</idea-plugin>
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
