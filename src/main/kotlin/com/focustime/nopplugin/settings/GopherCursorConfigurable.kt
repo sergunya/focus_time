@@ -22,20 +22,20 @@ class GopherCursorConfigurable(private val project: Project) : Configurable {
         panel = p
         checkBox = cb
         val settings = GopherCursorSettings.getInstance()
-        cb.isSelected = settings.state.enabled
+        cb.isSelected = settings.settingsState.enabled
         return p
     }
 
     override fun isModified(): Boolean {
         val settings = GopherCursorSettings.getInstance()
-        return checkBox?.isSelected != settings.state.enabled
+        return checkBox?.isSelected != settings.settingsState.enabled
     }
 
     override fun apply() {
         val settings = GopherCursorSettings.getInstance()
         val newVal = checkBox?.isSelected ?: true
-        val changed = settings.state.enabled != newVal
-        settings.state.enabled = newVal
+        val changed = settings.settingsState.enabled != newVal
+        settings.settingsState.enabled = newVal
         if (changed) {
             project.getService(GopherCursorInstaller::class.java)?.setEnabled(newVal)
         }
@@ -43,7 +43,7 @@ class GopherCursorConfigurable(private val project: Project) : Configurable {
 
     override fun reset() {
         val settings = GopherCursorSettings.getInstance()
-        checkBox?.isSelected = settings.state.enabled
+        checkBox?.isSelected = settings.settingsState.enabled
     }
 
     override fun disposeUIResources() {

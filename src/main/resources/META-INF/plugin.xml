@@ -1,7 +1,6 @@
 <idea-plugin>
   <id>com.focustime.nopplugin</id>
-  <name>Focus Time No-Op Plugin</name>
-  <vendor email="example@example.com">Focus Time</vendor>
+  <vendor email="developer@focustime.com" url="https://github.com/sergey-larionov">Focus Time</vendor>
 
   <description><![CDATA[
     A minimal plugin that replaces the blinking terminal cursor with a fast Gopher icon.
@@ -9,9 +8,7 @@
   ]]></description>
 
   <depends>com.intellij.modules.platform</depends>
-  <depends optional="true">org.jetbrains.plugins.terminal</depends>
-
-  <projectService serviceImplementation="com.focustime.nopplugin.terminal.GopherCursorInstaller"/>
+  <depends>org.jetbrains.plugins.terminal</depends>
 
   <extensions defaultExtensionNs="com.intellij">
     <projectConfigurable instance="com.focustime.nopplugin.settings.GopherCursorConfigurable"/>
@@ -23,40 +20,4 @@
             text="Toggle Gopher Terminal Cursor"
             description="Enable/Disable the Gopher cursor overlay in Terminal"/>
   </actions>
-</idea-plugin>
-<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
-<idea-plugin>
-    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
-    <id>com.focustime.nopplugin</id>
-
-    <!-- Public plugin name should be written in Title Case.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
-    <name>Focus Time No-Op Plugin</name>
-
-    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="developer@focustime.com" url="https://github.com/sergey-larionov">Focus Time</vendor>
-
-    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
-         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside this element.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
-    <description><![CDATA[
-    A minimal no-operation plugin for GoLand that demonstrates proper plugin structure and follows JetBrains development guidelines.
-    This plugin performs no actions and is intended for educational purposes and as a template for plugin development.
-    ]]></description>
-
-    <!-- Product and plugin compatibility requirements.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
-    <depends>com.intellij.modules.platform</depends>
-
-    <!-- Extension points defined by the plugin.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
-    <extensions defaultExtensionNs="com.intellij">
-        <!-- No extensions defined - this is a no-op plugin -->
-    </extensions>
-
-    <!-- Actions defined by the plugin.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-actions.html -->
-    <actions>
-        <!-- No actions defined - this is a no-op plugin -->
-    </actions>
 </idea-plugin>

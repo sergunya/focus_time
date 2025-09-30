@@ -9,8 +9,8 @@ class ToggleGopherCursorAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         val settings = GopherCursorSettings.getInstance()
-        settings.state.enabled = !settings.state.enabled
-        project.getService(GopherCursorInstaller::class.java)?.setEnabled(settings.state.enabled)
+        settings.settingsState.enabled = !settings.settingsState.enabled
+        project.getService(GopherCursorInstaller::class.java)?.setEnabled(settings.settingsState.enabled)
     }
 }
 
