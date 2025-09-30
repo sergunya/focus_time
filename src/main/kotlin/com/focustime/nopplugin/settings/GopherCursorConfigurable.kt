@@ -1,7 +1,6 @@
 package com.focustime.nopplugin.settings
 
 import com.focustime.nopplugin.editor.EditorGopherCursorInstaller
-import com.focustime.nopplugin.terminal.GopherCursorInstaller
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBCheckBox
@@ -12,12 +11,12 @@ class GopherCursorConfigurable(private val project: Project) : Configurable {
     private var panel: JPanel? = null
     private var checkBox: JBCheckBox? = null
 
-    override fun getDisplayName(): String = "Focus Time: Gopher Terminal Cursor"
+    override fun getDisplayName(): String = "Focus Time: Gopher Editor Cursor"
 
     override fun createComponent(): JComponent {
         val settings = GopherCursorSettings.getInstance()
 
-        val cb = JBCheckBox("Replace blinking terminal cursor with Gopher icon")
+        val cb = JBCheckBox("Replace the editor caret with a Gopher icon")
         cb.isSelected = settings.settingsState.enabled
         checkBox = cb
 
@@ -43,7 +42,6 @@ class GopherCursorConfigurable(private val project: Project) : Configurable {
         settings.settingsState.enabled = newEnabled
 
         if (enabledChanged) {
-            project.getService(GopherCursorInstaller::class.java)?.setEnabled(newEnabled)
             project.getService(EditorGopherCursorInstaller::class.java)?.setEnabled(newEnabled)
         }
     }

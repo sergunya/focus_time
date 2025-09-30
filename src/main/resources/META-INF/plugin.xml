@@ -3,15 +3,11 @@
   <vendor email="developer@focustime.com" url="https://github.com/sergey-larionov">Focus Time</vendor>
 
   <description><![CDATA[
-    A minimal plugin that replaces the blinking terminal cursor with a fast Gopher icon.
-    Toggle via Settings or action "Toggle Gopher Terminal Cursor".
+    A minimal plugin that replaces the editor caret with a fast Gopher icon.
+    Toggle via Settings or action "Toggle Gopher Editor Cursor".
   ]]></description>
 
   <depends>com.intellij.modules.platform</depends>
-  <depends>org.jetbrains.plugins.terminal</depends>
-
-  <!-- Ensure the installer service exists and can be requested -->
-  <projectService serviceImplementation="com.focustime.nopplugin.terminal.GopherCursorInstaller"/>
 
   <extensions defaultExtensionNs="com.intellij">
     <projectConfigurable instance="com.focustime.nopplugin.settings.GopherCursorConfigurable"/>
@@ -22,7 +18,7 @@
   <actions>
     <action id="com.focustime.nopplugin.actions.ToggleGopherCursor"
             class="com.focustime.nopplugin.actions.ToggleGopherCursorAction"
-            text="Toggle Gopher Terminal Cursor"
-            description="Enable/Disable the Gopher cursor overlay in Terminal"/>
+            text="Toggle Gopher Editor Cursor"
+            description="Enable/Disable the Gopher cursor overlay in the Editor"/>
   </actions>
 </idea-plugin>

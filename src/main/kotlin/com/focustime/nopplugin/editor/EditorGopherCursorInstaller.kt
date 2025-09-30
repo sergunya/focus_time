@@ -110,10 +110,11 @@ class EditorGopherCursorInstaller(private val project: Project) {
             val g2 = g.create() as java.awt.Graphics2D
             try {
                 g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
-                val size = (lineHeight * 0.95).toInt().coerceAtLeast(8)
+                val size = (lineHeight * 1.10).toInt().coerceAtLeast(10).coerceAtMost(lineHeight)
                 val x = pt.x - size / 2
                 val y = pt.y + (lineHeight - size) / 2
 
+                // Draw the icon with its own alpha; do not paint any background to keep full transparency
                 g2.drawImage(gopherOriginal, x, y, size, size, null)
             } finally {
                 g2.dispose()

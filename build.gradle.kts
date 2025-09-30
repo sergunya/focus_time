@@ -16,7 +16,7 @@ repositories {
 intellij {
     version.set("2025.2")
     type.set("GO") // Target GoLand specifically
-    plugins.set(listOf("org.jetbrains.plugins.terminal"))
+    plugins.set(emptyList())
 }
 
 tasks {

@@ -170,10 +170,14 @@ private class CursorPainter(private val target: JComponent, private val isEnable
         try {
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
             val scale = computeScale(cellW, cellH)
-            val w = (24 * scale).roundToInt()
-            val h = (24 * scale).roundToInt()
+            val w = (28 * scale).roundToInt()
+            val h = (28 * scale).roundToInt()
             val x = caretRect.x + (caretRect.width - w) / 2
             val y = caretRect.y + (caretRect.height - h) / 2
+
+            // Mask the classic terminal cursor under the icon to avoid bleed-through
+            g2.color = view.background
+            g2.fillRect(caretRect.x, caretRect.y, caretRect.width, caretRect.height)
 
             g2.drawImage(gopherOriginal, x, y, w, h, null)
         } finally {
@@ -187,21 +191,91 @@ private class CursorPainter(private val target: JComponent, private val isEnable
     }
 
     private fun inferCaretRectangle(component: JComponent, cellW: Int, cellH: Int): Rectangle? {
-        return try {
-            val panel = findAncestorWithName(component, "TerminalPanel") ?: return null
-            val clazz = panel.javaClass
-            val xField = clazz.declaredFields.firstOrNull { it.name.contains("cursorX", true) }
-            val yField = clazz.declaredFields.firstOrNull { it.name.contains("cursorY", true) }
-            if (xField != null && yField != null) {
-                xField.isAccessible = true
-                yField.isAccessible = true
-                val cx = (xField.get(panel) as? Int) ?: return null
-                val cy = (yField.get(panel) as? Int) ?: return null
-                Rectangle(cx * cellW, cy * cellH, cellW, cellH)
-            } else null
+        try {
+            // Try to find a relevant terminal-like ancestor component first
+            val panel = findAncestorWithName(component, "TerminalPanel")
+                ?: findAncestorWithName(component, "JediTerm")
+                ?: findAncestorWithName(component, "TerminalWidget")
+                ?: return null
+
+            // Strategy 1: common field names on panel
+            fun readIntField(obj: Any, vararg candidates: String): Int? {
+                val clazz = obj.javaClass
+                for (name in candidates) {
+                    try {
+                        val f = clazz.getDeclaredField(name)
+                        f.isAccessible = true
+                        val v = f.get(obj)
+                        if (v is Int) return v
+                    } catch (_: NoSuchFieldException) {
+                        // try next
+                    } catch (_: Throwable) {
+                        // ignore and try next
+                    }
+                }
+                // Also attempt on all declared fields with contains to be resilient across versions
+                try {
+                    val fields = clazz.declaredFields
+                    for (f in fields) {
+                        val lname = f.name.lowercase()
+                        if (candidates.any { lname.contains(it.lowercase()) }) {
+                            try {
+                                f.isAccessible = true
+                                val v = f.get(obj)
+                                if (v is Int) return v
+                            } catch (_: Throwable) {
+                                // continue
+                            }
+                        }
+                    }
+                } catch (_: Throwable) { }
+                return null
+            }
+
+            fun callIntGetter(obj: Any, vararg candidates: String): Int? {
+                val clazz = obj.javaClass
+                for (name in candidates) {
+                    try {
+                        val m = clazz.getMethod(name)
+                        val v = m.invoke(obj)
+                        if (v is Int) return v
+                    } catch (_: NoSuchMethodException) {
+                        // try next
+                    } catch (_: Throwable) {
+                        // ignore
+                    }
+                }
+                return null
+            }
+
+            val cx = readIntField(panel, "cursorX", "myCursorX", "caretX", "myCaretX")
+                ?: callIntGetter(panel, "getCursorX", "getCaretX")
+            val cy = readIntField(panel, "cursorY", "myCursorY", "caretY", "myCaretY")
+                ?: callIntGetter(panel, "getCursorY", "getCaretY")
+
+            if (cx != null && cy != null) {
+                return Rectangle(cx * cellW, cy * cellH, cellW, cellH)
+            }
+
+            // Strategy 2: some implementations keep a caret object with x/y
+            try {
+                val caretField = panel.javaClass.declaredFields.firstOrNull { it.name.contains("caret", true) || it.name.contains("cursor", true) }
+                if (caretField != null) {
+                    caretField.isAccessible = true
+                    val caretObj = caretField.get(panel)
+                    if (caretObj != null) {
+                        val ccx = readIntField(caretObj, "x", "column", "col") ?: callIntGetter(caretObj, "getX", "getColumn")
+                        val ccy = readIntField(caretObj, "y", "line", "row") ?: callIntGetter(caretObj, "getY", "getLine", "getRow")
+                        if (ccx != null && ccy != null) {
+                            return Rectangle(ccx * cellW, ccy * cellH, cellW, cellH)
+                        }
+                    }
+                }
+            } catch (_: Throwable) { }
         } catch (_: Throwable) {
-            null
+            // fall through to null
         }
+        return null
     }
 
     private fun findAncestorWithName(component: JComponent, nameFragment: String): JComponent? {
