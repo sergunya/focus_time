@@ -1,34 +1,97 @@
-## GoLand 2025.2 Dummy Plugin
+# Focus Time No-Op Plugin
 
-A minimal plugin for GoLand 2025.2 that intentionally does nothing. Useful as a template or for testing plugin installation from a local file.
+A minimal no-operation plugin for GoLand 2025.2 that demonstrates proper plugin structure and follows JetBrains development guidelines.
 
-### Features
-- Does nothing by design
-- No settings, no UI, no background tasks
+## Overview
 
-### Compatibility
-- GoLand: 2025.2
-- Platforms: macOS, Windows, Linux
+This plugin is designed to perform no operations and serves as:
+- An educational example of proper JetBrains plugin structure
+- A template for plugin development
+- A demonstration of modern Gradle-based IntelliJ Platform Plugin SDK usage
 
-### Installation (from local disk)
-1. Build or obtain the plugin archive (`.zip` or `.jar`).
-2. In GoLand, open:
-   - macOS: GoLand → Settings… → Plugins
-   - Windows/Linux: File → Settings… → Plugins
-3. Click the gear icon in the Plugins view and choose "Install Plugin from Disk…".
-4. Select the plugin archive and confirm.
-5. Restart GoLand when prompted.
+## Features
 
-### Usage
-There is nothing to configure or run. Installation is the only action; the plugin remains inert.
+- ✅ Proper Gradle-based project structure
+- ✅ Follows JetBrains plugin development guidelines
+- ✅ Compatible with GoLand 2025.2
+- ✅ No operational functionality (by design)
+- ✅ Installable from local disk
 
-### Uninstall
-1. Go to Settings… → Plugins.
-2. Find the plugin in the Installed tab.
-3. Click Uninstall and restart IDE if prompted.
+## Development
 
-### Privacy & Telemetry
-- No data is collected, transmitted, or stored.
+### Prerequisites
 
-### License
-MIT
+- Java 17 or higher
+- GoLand 2025.2 or compatible IntelliJ-based IDE
+
+### Building the Plugin
+
+1. Clone or download this repository
+2. Open terminal in the project root
+3. Run the build command:
+
+```bash
+./gradlew buildPlugin
+```
+
+The built plugin will be available in `build/distributions/focus-time-plugin-1.0.0.zip`
+
+### Installing the Plugin
+
+1. Open GoLand 2025.2
+2. Go to `File | Settings | Plugins`
+3. Click the gear icon and select "Install Plugin from Disk..."
+4. Navigate to `build/distributions/focus-time-plugin-1.0.0.zip`
+5. Select the file and click "OK"
+6. Restart GoLand to activate the plugin
+
+### Verifying Installation
+
+After restart:
+1. Go to `File | Settings | Plugins`
+2. Look for "Focus Time No-Op Plugin" in the installed plugins list
+3. Verify it's enabled (checkbox should be checked)
+
+## Project Structure
+
+```
+focus-time-plugin/
+├── build.gradle.kts              # Gradle build configuration
+├── gradle.properties             # Project properties
+├── settings.gradle.kts            # Gradle settings
+├── src/main/
+│   ├── kotlin/com/focustime/nopplugin/
+│   │   └── NoOpPlugin.kt         # Minimal plugin class
+│   └── resources/META-INF/
+│       └── plugin.xml            # Plugin descriptor
+├── gradle/wrapper/               # Gradle wrapper files
+├── gradlew                       # Gradle wrapper script (Unix)
+└── README.md                     # This file
+```
+
+## Plugin Configuration
+
+The plugin is configured in `src/main/resources/META-INF/plugin.xml`:
+
+- **ID**: `com.focustime.nopplugin`
+- **Name**: Focus Time No-Op Plugin
+- **Version**: 1.0.0
+- **Compatibility**: GoLand 2025.2 (build 252+)
+
+## Development Guidelines
+
+This plugin follows JetBrains' official development guidelines:
+
+- Uses modern Gradle-based IntelliJ Platform Plugin SDK
+- Targets specific IntelliJ Platform version (2025.2)
+- Includes proper plugin descriptor with required metadata
+- Uses appropriate project structure and naming conventions
+- Compatible with plugin marketplace standards
+
+## License
+
+This project is intended for educational purposes and plugin development reference.
+
+## Contributing
+
+This is a minimal example plugin. For real plugin development, extend the structure with actual functionality while maintaining the established patterns.
