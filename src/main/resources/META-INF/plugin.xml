@@ -10,8 +10,13 @@
   <depends>com.intellij.modules.platform</depends>
   <depends>org.jetbrains.plugins.terminal</depends>
 
+  <!-- Ensure the installer service exists and can be requested -->
+  <projectService serviceImplementation="com.focustime.nopplugin.terminal.GopherCursorInstaller"/>
+
   <extensions defaultExtensionNs="com.intellij">
     <projectConfigurable instance="com.focustime.nopplugin.settings.GopherCursorConfigurable"/>
+    <!-- Force service instantiation after project startup -->
+    <postStartupActivity implementation="com.focustime.nopplugin.startup.GopherCursorStartup"/>
   </extensions>
 
   <actions>
