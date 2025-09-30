@@ -1,5 +1,6 @@
 package com.focustime.nopplugin.terminal
 
+import com.focustime.nopplugin.settings.GopherCursorSettings
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
@@ -8,6 +9,10 @@ import java.awt.Component
 import java.awt.Container
 import java.awt.Rectangle
 import java.awt.RenderingHints
+import com.intellij.util.ui.UIUtil
+import com.intellij.ui.JBColor
+import java.awt.AlphaComposite
+import java.awt.Color
 import java.awt.image.BufferedImage
 import javax.swing.ImageIcon
 import javax.swing.JComponent
@@ -29,6 +34,10 @@ class GopherCursorInstaller(private val project: Project) : Disposable {
 
     fun setEnabled(enabled: Boolean) {
         overlays.values.forEach { it.isEnabled = enabled; it.repaintTarget() }
+    }
+
+    fun updateColor(color: java.awt.Color) {
+        overlays.values.forEach { it.updateColor(color); it.repaintTarget() }
     }
 
     private fun installOnExistingTerminalTabs() {
@@ -57,6 +66,10 @@ class GopherCursorInstaller(private val project: Project) : Disposable {
         findTerminalLikeComponents(root, terminals)
         terminals.forEach { terminalComponent ->
             if (overlays.containsKey(terminalComponent)) return@forEach
+
+            // Skip if already wrapped in a JLayer or parent is JLayer
+            if (terminalComponent is JLayer<*> || terminalComponent.parent is JLayer<*>) return@forEach
+
             val overlay = GopherCursorOverlay(terminalComponent)
             overlays[terminalComponent] = overlay
             overlay.install(true)
@@ -65,14 +78,22 @@ class GopherCursorInstaller(private val project: Project) : Disposable {
 
     private fun findTerminalLikeComponents(container: Container, results: MutableList<JComponent>) {
         for (child in container.components) {
+            // Skip JLayer components
+            if (child is JLayer<*>) {
+                // But recurse into the view of the JLayer
+                val view = child.view
+                if (view is Container) {
+                    findTerminalLikeComponents(view, results)
+                }
+                continue
+            }
+
             if (child is JComponent) {
                 val name = child.javaClass.name
                 if (name.contains("TerminalPanel") || name.contains("JediTermWidget") || name.contains("TerminalWidget")) {
                     results.add(child)
                 }
-                if (child is Container) {
-                    findTerminalLikeComponents(child, results)
-                }
+                findTerminalLikeComponents(child, results)
             }
         }
     }
@@ -91,16 +112,34 @@ private class GopherCursorOverlay(private val terminalComponent: JComponent) {
     fun install(enabled: Boolean) {
         isEnabled = enabled
         if (layer != null) return
-        painter = CursorPainter(terminalComponent)
+
+        // Validate parent exists and is not a JLayer
+        val parent = terminalComponent.parent
+        if (parent == null || parent is JLayer<*>) {
+            return
+        }
+
+        // Ensure terminalComponent is not already wrapped
+        if (terminalComponent is JLayer<*>) {
+            return
+        }
+
+        painter = CursorPainter(terminalComponent) { isEnabled }
         @Suppress("UNCHECKED_CAST")
         val jlayer = JLayer(terminalComponent, painter)
         layer = jlayer
-        val parent = terminalComponent.parent
-        val index = parent.getComponentZOrder(terminalComponent)
-        parent.remove(terminalComponent)
-        parent.add(jlayer, index)
-        parent.revalidate()
-        parent.repaint()
+
+        try {
+            val index = parent.getComponentZOrder(terminalComponent)
+            parent.remove(terminalComponent)
+            parent.add(jlayer, index)
+            parent.revalidate()
+            parent.repaint()
+        } catch (e: Exception) {
+            // If installation fails, clean up
+            layer = null
+            painter = null
+        }
     }
 
     fun uninstall() {
@@ -114,16 +153,28 @@ private class GopherCursorOverlay(private val terminalComponent: JComponent) {
         painter = null
     }
 
+    fun updateColor(color: java.awt.Color) {
+        painter?.updateColor(color)
+    }
+
     fun repaintTarget() {
         layer?.repaint()
     }
 }
 
-private class CursorPainter(target: JComponent) : LayerUI<JComponent>() {
-    private val gopher by lazy { loadGopherIcon() }
+private class CursorPainter(private val target: JComponent, private val isEnabledProvider: () -> Boolean) : LayerUI<JComponent>() {
+    private val gopherOriginal by lazy { loadGopherIcon() }
+    private var currentColor: Color = Color(GopherCursorSettings.getInstance().settingsState.cursorColor, true)
+    private var tintedGopher: java.awt.Image? = null
+
+    fun updateColor(color: Color) {
+        currentColor = color
+        tintedGopher = null // Force regeneration
+    }
 
     override fun paint(g: java.awt.Graphics, c: JComponent) {
         super.paint(g, c)
+        if (!isEnabledProvider()) return
         if (c !is JLayer<*>) return
         val view = c.view as? JComponent ?: return
         if (!view.isShowing) return
@@ -142,10 +193,41 @@ private class CursorPainter(target: JComponent) : LayerUI<JComponent>() {
             val h = (24 * scale).roundToInt()
             val x = caretRect.x + (caretRect.width - w) / 2
             val y = caretRect.y + (caretRect.height - h) / 2
-            g2.drawImage(gopher, x, y, w, h, null)
+
+            // Apply color tint
+            val imageToDraw = getTintedGopher(w, h)
+            g2.drawImage(imageToDraw, x, y, w, h, null)
         } finally {
             g2.dispose()
         }
+    }
+
+    private fun getTintedGopher(w: Int, h: Int): java.awt.Image {
+        // If color is white (or very close), return original
+        if (currentColor.red > 250 && currentColor.green > 250 && currentColor.blue > 250) {
+            return gopherOriginal
+        }
+
+        // Generate tinted version
+        val cached = tintedGopher
+        if (cached != null && cached.getWidth(null) == w && cached.getHeight(null) == h) {
+            return cached
+        }
+
+        val buffered = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
+        val g = buffered.createGraphics()
+
+        // Draw original image
+        g.drawImage(gopherOriginal, 0, 0, w, h, null)
+
+        // Apply color tint
+        g.composite = AlphaComposite.SrcAtop
+        g.color = currentColor
+        g.fillRect(0, 0, w, h)
+        g.dispose()
+
+        tintedGopher = buffered
+        return buffered
     }
 
     private fun computeScale(cellW: Int, cellH: Int): Double {
@@ -185,10 +267,10 @@ private class CursorPainter(target: JComponent) : LayerUI<JComponent>() {
         return if (url != null) ImageIcon(url).image else placeholderImage()
     }
 
-    private fun placeholderImage(): BufferedImage {
-        val img = BufferedImage(24, 24, BufferedImage.TYPE_INT_ARGB)
-        val g = img.createGraphics()
-        g.color = java.awt.Color(220, 0, 0)
+    private fun placeholderImage(): java.awt.Image {
+        val img = UIUtil.createImage(target, 24, 24, java.awt.image.BufferedImage.TYPE_INT_ARGB)
+        val g = img.graphics as java.awt.Graphics2D
+        g.color = JBColor(java.awt.Color(220, 0, 0), java.awt.Color(220, 0, 0))
         g.fillRoundRect(0, 0, 24, 24, 6, 6)
         g.dispose()
         return img
