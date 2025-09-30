@@ -1,6 +1,7 @@
 package com.focustime.nopplugin.settings
 
 import com.focustime.nopplugin.editor.EditorCursorColorManager
+import com.focustime.nopplugin.editor.EditorGopherCursorInstaller
 import com.focustime.nopplugin.terminal.GopherCursorInstaller
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
@@ -92,16 +93,19 @@ class GopherCursorConfigurable(private val project: Project) : Configurable {
         settings.settingsState.enabled = newEnabled
         settings.settingsState.cursorColor = newColor
 
-        val installer = project.getService(GopherCursorInstaller::class.java)
+        val terminalInstaller = project.getService(GopherCursorInstaller::class.java)
         val editorManager = project.getService(EditorCursorColorManager::class.java)
+        val editorInstaller = project.getService(EditorGopherCursorInstaller::class.java)
         if (enabledChanged) {
-            installer?.setEnabled(newEnabled)
+            terminalInstaller?.setEnabled(newEnabled)
             editorManager?.setEnabled(newEnabled)
+            editorInstaller?.setEnabled(newEnabled)
         }
         if (colorChanged) {
             val awtColor = Color(newColor, true)
-            installer?.updateColor(awtColor)
+            terminalInstaller?.updateColor(awtColor)
             editorManager?.updateColor(awtColor)
+            editorInstaller?.updateColor(awtColor)
         }
     }
 
