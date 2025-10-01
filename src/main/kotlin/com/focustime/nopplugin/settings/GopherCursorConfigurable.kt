@@ -9,19 +9,25 @@ import javax.swing.*
 
 class GopherCursorConfigurable(private val project: Project) : Configurable {
     private var panel: JPanel? = null
-    private var checkBox: JBCheckBox? = null
+    private var gopherCheckBox: JBCheckBox? = null
+    private var darkenCheckBox: JBCheckBox? = null
 
     override fun getDisplayName(): String = "Focus Time: Gopher Editor Cursor"
 
     override fun createComponent(): JComponent {
         val settings = GopherCursorSettings.getInstance()
 
-        val cb = JBCheckBox("Replace the editor caret with a Gopher icon")
-        cb.isSelected = settings.settingsState.enabled
-        checkBox = cb
+        val gopherCb = JBCheckBox("Replace the editor caret with a Gopher icon")
+        gopherCb.isSelected = settings.settingsState.enabled
+        gopherCheckBox = gopherCb
+
+        val darkenCb = JBCheckBox("Darken editor background while holding Control (after 5s)")
+        darkenCb.isSelected = settings.settingsState.darkenOnControlEnabled
+        darkenCheckBox = darkenCb
 
         val p = FormBuilder.createFormBuilder()
-            .addComponent(cb)
+            .addComponent(gopherCb)
+            .addComponent(darkenCb)
             .addComponentFillVertically(JPanel(), 0)
             .panel
 
@@ -31,29 +37,41 @@ class GopherCursorConfigurable(private val project: Project) : Configurable {
 
     override fun isModified(): Boolean {
         val settings = GopherCursorSettings.getInstance()
-        return checkBox?.isSelected != settings.settingsState.enabled
+        val gopherChanged = gopherCheckBox?.isSelected != settings.settingsState.enabled
+        val darkenChanged = darkenCheckBox?.isSelected != settings.settingsState.darkenOnControlEnabled
+        return gopherChanged || darkenChanged
     }
 
     override fun apply() {
         val settings = GopherCursorSettings.getInstance()
-        val newEnabled = checkBox?.isSelected ?: true
-        val enabledChanged = settings.settingsState.enabled != newEnabled
+        val newGopherEnabled = gopherCheckBox?.isSelected ?: true
+        val newDarkenEnabled = darkenCheckBox?.isSelected ?: true
+        val gopherChanged = settings.settingsState.enabled != newGopherEnabled
+        val darkenChanged = settings.settingsState.darkenOnControlEnabled != newDarkenEnabled
 
-        settings.settingsState.enabled = newEnabled
+        settings.settingsState.enabled = newGopherEnabled
+        settings.settingsState.darkenOnControlEnabled = newDarkenEnabled
 
-        if (enabledChanged) {
-            project.getService(EditorGopherCursorInstaller::class.java)?.setEnabled(newEnabled)
+        val installer = project.getService(EditorGopherCursorInstaller::class.java)
+        if (gopherChanged) {
+            installer?.setEnabled(newGopherEnabled)
+        }
+        if (darkenChanged) {
+            // Request repaint of overlays to reflect new setting
+            installer?.refreshOverlays()
         }
     }
 
     override fun reset() {
         val settings = GopherCursorSettings.getInstance()
-        checkBox?.isSelected = settings.settingsState.enabled
+        gopherCheckBox?.isSelected = settings.settingsState.enabled
+        darkenCheckBox?.isSelected = settings.settingsState.darkenOnControlEnabled
     }
 
     override fun disposeUIResources() {
         panel = null
-        checkBox = null
+        gopherCheckBox = null
+        darkenCheckBox = null
     }
 }
 

@@ -10,7 +10,10 @@ import com.intellij.openapi.components.service
 @State(name = "GopherCursorSettings", storages = [Storage("gopherCursorSettings.xml")])
 class GopherCursorSettings : PersistentStateComponent<GopherCursorSettings.State> {
     data class State(
-        var enabled: Boolean = true
+        var enabled: Boolean = true,
+        var darkenOnControlEnabled: Boolean = true,
+        var darkenStartDelayMs: Int = 1000,
+        var darkenMaxAlpha: Float = 0.5f
     )
 
     var settingsState = State()
